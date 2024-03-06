@@ -1,9 +1,8 @@
 # Simulation study
 
 ## Part 1
-- Simulate Multivariate data (mixture model)
-- Simulate posterior
-- Plot simulated posterior + run PP-test
+- Simulate Multivariate LnL (mixture model)
+- Train LnL surrogate -- can we get low KL divergence?
 
 ## Part 2
 - Simulate Multivariate data (mixture model)

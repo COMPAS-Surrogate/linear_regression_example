@@ -1,12 +1,13 @@
 import glob
+from collections import namedtuple
+from itertools import product
+
 import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
 import pandas as pd
-from bilby.core.result import Result
 import scipy
-from itertools import product
-from collections import namedtuple
+from bilby.core.result import Result
+
 
 def cache_pp_data(results_regex, filename):
     res = glob.glob(results_regex)
@@ -22,12 +23,15 @@ def cache_pp_data(results_regex, filename):
     return credible_levels
 
 
-def make_pp_plot(credible_levels, confidence_interval=[0.68, 0.95, 0.997], fname='pp_plot.png'):
+def make_pp_plot(
+        credible_levels, confidence_interval=[0.68, 0.95, 0.997], fname='pp_plot.png',
+        lines=None
 
-
-    colors = ["C{}".format(i) for i in range(8)]
-    linestyles = ["-", "--", ":"]
-    lines = ["{}{}".format(a, b) for a, b in product(linestyles, colors)]
+):
+    if lines is None:
+        colors = ["C{}".format(i) for i in range(8)]
+        linestyles = ["-", "--", ":"]
+        lines = ["{}{}".format(a, b) for a, b in product(linestyles, colors)]
     if len(lines) < len(credible_levels.keys()):
         raise ValueError("Larger number of parameters than unique linestyles")
 
@@ -35,7 +39,6 @@ def make_pp_plot(credible_levels, confidence_interval=[0.68, 0.95, 0.997], fname
 
     N = len(credible_levels)
     fig, ax = plt.subplots()
-
 
     confidence_interval_alpha = [0.1] * len(confidence_interval)
 
@@ -77,8 +80,19 @@ def make_pp_plot(credible_levels, confidence_interval=[0.68, 0.95, 0.997], fname
 
 
 if __name__ == "__main__":
-    credible_levels = cache_pp_data('outdir_analytical/an*result.json', 'analytical_levels.csv')
-    make_pp_plot(credible_levels, fname='analytical_pp_plot.png')
-    credible_levels = cache_pp_data('outdir_surrogate_i*/*result.json', 'surrogate_levels.csv')
-    make_pp_plot(credible_levels, fname='surrogate_pp_plot.png')
-    plt.show()
+    cred_lvls_analytical = cache_pp_data('outdir_analytical/an*result.json', 'analytical_levels.csv')
+    cred_lvls_surrogate = cache_pp_data('outdir_surrogate_i*/*result.json', 'surrogate_levels.csv')
+    # combine
+    cred_lvls = pd.DataFrame(
+        dict(
+            m_analytical=cred_lvls_analytical['m'],
+            c_analytical=cred_lvls_analytical['c'],
+            m_surrogate=cred_lvls_surrogate['m'],
+            c_surrogate=cred_lvls_surrogate['c']
+        )
+    )
+
+    make_pp_plot(
+        cred_lvls, fname='pp_plot.png',
+        lines=['-C0', '-C1', ':C0',':C1']
+    )
